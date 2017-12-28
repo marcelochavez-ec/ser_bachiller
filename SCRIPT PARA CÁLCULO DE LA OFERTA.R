@@ -178,14 +178,3 @@ cupos_p14_amazonia <- cupos_p14_amazonia %>%
                     group_by(car_nombre_carrera) %>% 
                     summarise(total=sum(total_cupos))
 
-
-
-
-
-
-
-
-
-
-  
-  
