@@ -23,13 +23,16 @@ asigna_p2_p12<-asignaciones_1 %>%
 reporte_asigna_p2_p12<-dcast(asigna_p2_p12,
                      asigna_p2_p12$per_id+
                      asigna_p2_p12$provincia_campus+
-                     #asigna_p2_p12$canton_campus+
-                     #asigna_p2_p12$parroquia_campus+
+                     asigna_p2_p12$canton_campus+
+                     asigna_p2_p12$ciudad_campus+ 
+                     asigna_p2_p12$parroquia_campus+
                      asigna_p2_p12$ies_nombre_instit+
+                     asigna_p2_p12$ies_tipo_ies+   
                      asigna_p2_p12$car_nombre_carrea~
                      asigna_p2_p12$nvc_acepta_carrera)
 
-names(reporte_asigna_p2_p12)<-c("per_id","provincia_campus","ies_nombre_instit",
+names(reporte_asigna_p2_p12)<-c("per_id","provincia_campus","canton_campus","ciudad_campus",
+                                "parroquia_campus","ies_nombre_instit","ies_tipo_ies",
                                 "car_nombre_carrera","SI","NO","NO_SE_PRONUNCIA")
 
 
@@ -50,7 +53,7 @@ oferta_p2_p12<-oferta_p2_p12 %>%
 names(oferta_p2_p12)[4]<-"car_nombre_carrera"
 names(oferta_p2_p12)[5]<-"total_cupos"
 
-oferta_p2_p12<-oferta_p2_p12$ %>% filter(total_cupos!="NA")
+oferta_p2_p12<-oferta_p2_p12 %>% filter(total_cupos!="NA")
 
 base_1<-reporte_asigna_p2_p12 %>% 
         select(per_id,provincia_campus,ies_nombre_instit,car_nombre_carrera,
