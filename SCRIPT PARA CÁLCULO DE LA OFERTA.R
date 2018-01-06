@@ -1,11 +1,11 @@
-# load("/home/marcelo/Documents/PROYECTO_BI_SENESCYT_2/BDD_FUENTES/VISTAS/asignaciones_1.RData")
-# asignaciones_1<-as.data.frame(lapply(asignaciones_1,function(x) if(is.character(x))
-#   iconv(x,"UTF-8","UTF-8") else x),stringsAsFactors=TRUE)
-# 
-# 
-# load("/home/marcelo/Documents/PROYECTO_BI_SENESCYT_2/BDD_FUENTES/VISTAS/asignaciones_2.RData")
-# asignaciones_2<-as.data.frame(lapply(asignaciones_2,function(x) if(is.character(x))
-#   iconv(x,"UTF-8","UTF-8") else x),stringsAsFactors=TRUE)
+load("/home/marcelo/Documents/PROYECTO_BI_SENESCYT_2/BDD_FUENTES/VISTAS/asignaciones_1.RData")
+asignaciones_1<-as.data.frame(lapply(asignaciones_1,function(x) if(is.character(x))
+  iconv(x,"UTF-8","UTF-8") else x),stringsAsFactors=TRUE)
+
+
+load("/home/marcelo/Documents/PROYECTO_BI_SENESCYT_2/BDD_FUENTES/VISTAS/asignaciones_2.RData")
+asignaciones_2<-as.data.frame(lapply(asignaciones_2,function(x) if(is.character(x))
+  iconv(x,"UTF-8","UTF-8") else x),stringsAsFactors=TRUE)
 
 
 asigna_p2_p12<-asignaciones_1 %>% 
