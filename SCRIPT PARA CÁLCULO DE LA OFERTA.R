@@ -1,3 +1,23 @@
+#--------------------------------------------------------------------------------------------------------------------------
+
+# PROCESO DE POSTULACIÓN:
+
+# PAQUETES:
+library(RPostgreSQL)
+library(dplyr)
+library(reshape2)
+library(xlsx)
+library(tidyr)
+library(sqldf)
+library(dbplyr)
+library(plyr)
+
+# CONEXIÓN A POSTGRESQL:
+
+senescyt_bi<-dbConnect("PostgreSQL", dbname="senescyt_bi",
+                       host="localhost",port=5432,
+                       user="postgres",password="postgres")
+
 load("/home/marcelo/Documents/PROYECTO_BI_SENESCYT_2/BDD_FUENTES/VISTAS/asignaciones_1.RData")
 asignaciones_1<-as.data.frame(lapply(asignaciones_1,function(x) if(is.character(x))
   iconv(x,"UTF-8","UTF-8") else x),stringsAsFactors=TRUE)
@@ -10,32 +30,33 @@ asignaciones_2<-as.data.frame(lapply(asignaciones_2,function(x) if(is.character(
 
 asigna_p2_p12<-asignaciones_1 %>% 
                filter(ccp_estado=="A") %>% 
+               mutate(nvc_acepta_carrera=as.character(as.factor(nvc_acepta_carrera))) %>% 
                mutate(nvc_acepta_carrera=recode(nvc_acepta_carrera,
                                                 "S"="SI",
                                                 "N"="NO")) %>% 
-               mutate(nvc_acepta_carrera=ifelse(is.na(nvc_acepta_carrera),"NO_SE_PRONUNCIA",
+               mutate(nvc_acepta_carrera=ifelse(is.na(nvc_acepta_carrera),"NO SE PRONUNCIA",
                                                nvc_acepta_carrera)) %>% 
                select(usu_id,provincia_campus,canton_campus,
                       parroquia_campus,ccp_cupos_reales,
                       nvc_acepta_carrera,ies_nombre_instit,per_id,
-                      car_nombre_carrea)
+                      car_nombre_carrea,ies_tipo_ies,area_nombre) %>% 
+               plyr::rename(c("car_nombre_carrea"="car_nombre_carrera"))
+
 
 reporte_asigna_p2_p12<-dcast(asigna_p2_p12,
-                     asigna_p2_p12$per_id+
-                     asigna_p2_p12$provincia_campus+
-                     asigna_p2_p12$canton_campus+
-                     asigna_p2_p12$ciudad_campus+ 
-                     asigna_p2_p12$parroquia_campus+
-                     asigna_p2_p12$ies_nombre_instit+
-                     asigna_p2_p12$ies_tipo_ies+   
-                     asigna_p2_p12$car_nombre_carrea~
-                     asigna_p2_p12$nvc_acepta_carrera)
+                             asigna_p2_p12$per_id+
+                             asigna_p2_p12$provincia_campus+
+                             asigna_p2_p12$canton_campus+
+                             asigna_p2_p12$parroquia_campus+
+                             asigna_p2_p12$ies_nombre_instit+
+                             asigna_p2_p12$ies_tipo_ies+
+                             asigna_p2_p12$area_nombre+   
+                             asigna_p2_p12$car_nombre_carrera~
+                             asigna_p2_p12$nvc_acepta_carrera)
 
-names(reporte_asigna_p2_p12)<-c("per_id","provincia_campus","canton_campus","ciudad_campus",
-                                "parroquia_campus","ies_nombre_instit","ies_tipo_ies",
-                                "car_nombre_carrera","SI","NO","NO_SE_PRONUNCIA")
-
-
+names(reporte_asigna_p2_p12)<-c("per_id","provincia_campus","canton_campus","parroquia_campus",
+                                "ies_nombre_instit","ies_tipo_ies","area","car_nombre_carrera","NO",
+                                "NO_SE_PRONUNCIA","SI")
 
 
 oferta_p2_p12<-asignaciones_1 %>% 
