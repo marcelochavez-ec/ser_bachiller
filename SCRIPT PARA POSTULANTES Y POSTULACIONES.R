@@ -6,11 +6,6 @@
 library(RPostgreSQL)
 library(dplyr)
 library(reshape2)
-library(xlsx)
-library(tidyr)
-library(sqldf)
-library(dbplyr)
-library(sparklyr)
 
 # CONEXIÓN A POSTGRESQL:
 
