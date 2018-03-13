@@ -1,0 +1,51 @@
+
+#===============================================================================================
+
+# CÁLCULO DE LOS POSTULANTES:
+# Per 2 al Per 12:
+
+postulantes_p2_p12<-postulaciones_1 %>% 
+                    filter(oca_orden_prioridad<=5) %>% 
+                    select(usu_id,per_id) %>% 
+                    distinct()
+
+postulantes_p13<-postulaciones_2 %>% 
+                 filter(per_id==13 & pos_prioridad<=5) %>% 
+                 select(usu_id,per_id) %>% 
+                 distinct()
+
+postulantes_p14<-postulaciones_2 %>% 
+                 filter(per_id==14 & pos_estado_new==1 & pos_prioridad<=5) %>% 
+                 select(usu_id,per_id) %>% 
+                 distinct()
+
+
+postulantes_p2_p14<-rbind(postulantes_p2_p12,postulantes_p13,postulantes_p14)
+
+postulantes_p2_p14<-merge(postulantes_p2_p14,inscritos_p2_p14,
+                          by=c("usu_id","per_id"),all.x = T)
+
+postulantes_p2_p14<-dcast(postulantes_p2_p14,
+                          postulantes_p2_p14$prov_residencia~
+                          postulantes_p2_p14$per_id)
+
+dbWriteTable(senescyt_bi_local,"postulantes_finalisimo",
+             postulantes_p2_p14,overwrite=T,row.names=F)
+#===============================================================================================
+# INSCRITOS:
+ins_p2_p7<-inscritos_1 %>%
+           select(usu_id,provincia_reside,per_id)
+             
+names(ins_p2_p7)[2]<-"prov_residencia"
+
+ins_p8_p12<-inscritos_2 %>%
+            select(usu_id,provincia_reside,per_id)
+
+names(ins_p8_p12)[2]<-"prov_residencia"
+
+ins_p13_p14<-inscritos_3 %>%
+             select(usu_id,prov_residencia,per_id) 
+
+inscritos_p2_p14<-rbind(ins_p2_p7,ins_p8_p12,ins_p13_p14)
+
+inscritos_p2_p14<-inscritos_p2_p14 %>% distinct()
