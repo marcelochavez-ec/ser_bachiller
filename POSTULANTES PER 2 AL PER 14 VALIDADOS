@@ -49,3 +49,29 @@ ins_p13_p14<-inscritos_3 %>%
 inscritos_p2_p14<-rbind(ins_p2_p7,ins_p8_p12,ins_p13_p14)
 
 inscritos_p2_p14<-inscritos_p2_p14 %>% distinct()
+#===============================================================================================
+# CÁLCULO DE DEMANDA DE CARRERAS:
+# Per 2 al Per 14:
+
+demanda_p2_p12<-postulaciones_1 %>% 
+                filter(oca_orden_prioridad<=5) %>% 
+                select(per_id,provincia_ies,car_nombre_carrea) %>% 
+                plyr::rename(c("car_nombre_carrea"="car_nombre_carrera")) 
+
+demanda_p13<-postulaciones_2 %>% 
+             filter(per_id==13 & pos_prioridad<=5) %>% 
+             select(per_id,provincia_campus,car_nombre_carrera) %>% 
+             plyr::rename(c("provincia_campus"="provincia_ies")) 
+
+demanda_p14<-postulaciones_2 %>% 
+             filter(per_id==14 & pos_estado_new==1 & pos_prioridad<=5) %>% 
+             select(per_id,provincia_campus,car_nombre_carrera) %>% 
+             plyr::rename(c("provincia_campus"="provincia_ies")) 
+
+demanda_p2_p14<-rbind(demanda_p2_p12,demanda_p13,demanda_p14)
+
+demanda_p2_p14<-demanda_p2_p14 %>% 
+                mutate(postulaciones=1) %>% 
+                group_by(per_id,provincia_ies,car_nombre_carrera) %>% 
+                summarise_each(funs(sum),postulaciones) %>% 
+                arrange(provincia_ies,desc(postulaciones))
