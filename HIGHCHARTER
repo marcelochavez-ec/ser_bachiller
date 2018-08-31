@@ -1,0 +1,162 @@
+library(highcharter)
+library(RPostgreSQL)
+library(DBI)
+library(dplyr)
+library(xts)
+library(reshape2)
+
+ser_bachiller<-dbConnect("PostgreSQL",dbname="ser_bachiller",
+                         host="192.168.0.102",port=5432,user="postgres",
+                         password="postgres")
+
+stg_inscritos <- dbGetQuery(ser_bachiller,"select * from stage.stg_inscritos")
+
+stg_inscritos<-as.data.frame(lapply(stg_inscritos,
+                                    function(x) 
+                                      if(is.character(x))
+                                        iconv(x,
+                                              "UTF-8",
+                                              "UTF-8") 
+                                    else x),
+                             stringsAsFactors=F)
+
+substrFinal <- function(x, n)
+               {
+                substr(x, nchar(x)-n+1, nchar(x)) 
+               }
+
+#==========================================================================================
+
+data("favorite_bars")
+
+data("favorite_pies")
+
+highchart() %>% 
+  # Data
+  hc_add_series(favorite_pies,
+                "column",
+                hcaes(x = pie,
+                      y = percent)) %>%
+  #hc_add_series(favorite_pies, "pie", hcaes(name = bar, y = percent), name = "Bars") %>%
+  # Optiosn for each type of series
+  hc_plotOptions(
+    series = list(
+      showInLegend = FALSE,
+      pointFormat = "{point.y}%"
+    ),
+    column = list(
+      colorByPoint = TRUE
+    )) %>%
+  # Axis
+  hc_yAxis(
+    labels = list(format = "{value}%"), max = 100
+  ) %>% 
+  hc_xAxis(categories = favorite_pies$pie) %>%
+  # Titles and credits
+  hc_title(
+    text = "Gráfico de barras con Highcharter"
+  ) %>%
+  hc_subtitle(text = "En porcentajes %") %>% 
+  hc_credits(
+    enabled = TRUE, text = "Elaborado por: Marcelo Chávez",
+    href = "https://www.youtube.com/watch?v=f_J8QU1m0Ng",
+    style = list(fontSize = "12px")
+  )
+
+
+#=============================================================================================
+
+# Inscritos por periodo ENES/Ser Bachiller:
+
+inscritos_nac <- stg_inscritos %>% 
+                 filter(efectivos == 1) %>% 
+                 group_by(periodos, per_id) %>% 
+                 dplyr::summarise(total_inscritos = n()) %>% 
+                 mutate(anio = substrFinal(periodos,4)) %>% 
+                 group_by(anio) %>% 
+                 mutate(porcentaje = round(((total_inscritos /
+                                                sum(total_inscritos))*100),2)) %>% 
+                 select(per_id,
+                        periodos,
+                        anio,
+                        total_inscritos,
+                        porcentaje) %>% 
+                 arrange(per_id)
+
+highchart() %>% 
+  hc_add_series(inscritos_nac,
+                "column",
+                hcaes(x = periodos,
+                      y = total_inscritos)) %>%
+  #hc_add_series(favorite_bars, "pie", hcaes(name = bar, y = percent), name = "Bars") %>%
+  # Optiosn for each type of series
+  hc_plotOptions(
+    series = list(
+      showInLegend = F,
+      pointFormat = "{point.y}%"),
+    column = list(
+      colorByPoint = T
+    )) %>%
+  # Axis
+  hc_yAxis(labels = list(format = "{value}"), max = 360000) %>% 
+  hc_xAxis(categories = c("1er. Semestre 2012",
+                          "2do. Semestre 2012",
+                          "1er. Semestre 2013",
+                          "2do. Semestre 2013",
+                          "1er. Semestre 2014",
+                          "2do. Semestre 2014",
+                          "1er. Semestre 2015",
+                          "2do. Semestre 2015",
+                          "1er. Semestre 2016",
+                          "2do. Semestre 2016",
+                          "1er. Semestre 2017",
+                          "2do. Semestre 2017",
+                          "1er. Semestre 2018")) %>%
+  # Titles and credits
+  hc_title(
+    text = "Inscritos por periodo ENES/Ser Bachiller",
+    margin = 20, align = "left",
+    style = list(color = "black", fontWeight = "bold")) %>%
+  hc_subtitle(text = "Fuente: Subsecretaría de Acceso a la Educación Superior",
+              align = "left", style = list(color = "gray24", fontWeight = "bold")) %>% 
+  hc_credits(
+    enabled = TRUE,
+    text = "Elaborado por: Dirección de Producción de la Información",
+            style = list(fontSize = "12px", useHTML = TRUE,
+                 color = "black"))
+
+#=========================================================================================================
+
+inscritos_prov <- stg_inscritos %>% 
+                  mutate(fecha_per_id = case_when(
+                         periodos == "1er. Semestre 2012" ~ "2012-01-01",
+                         periodos == "2do. Semestre 2012" ~ "2012-06-01",
+                         periodos == "1er. Semestre 2013" ~ "2013-01-01",
+                         periodos == "2do. Semestre 2013" ~ "2013-06-01",
+                         periodos == "1er. Semestre 2014" ~ "2014-01-01",
+                         periodos == "2do. Semestre 2014" ~ "2014-06-01",
+                         periodos == "1er. Semestre 2015" ~ "2015-01-01",
+                         periodos == "2do. Semestre 2015" ~ "2015-06-01",
+                         periodos == "1er. Semestre 2016" ~ "2016-01-01",
+                         periodos == "2do. Semestre 2016" ~ "2016-06-01",
+                         periodos == "1er. Semestre 2017" ~ "2017-01-01",
+                         periodos == "2do. Semestre 2017" ~ "2017-06-01",
+                         periodos == "1er. Semestre 2018" ~ "2018-01-01")) %>% 
+                  group_by(fecha_per_id,
+                           provincia_reside) %>% 
+                  dplyr::summarise(total_inscritos = n())
+
+inscritos_prov <- dcast(inscritos_prov,
+                        fecha_per_id ~
+                          paste0(provincia_reside),
+                        value.var = "total_inscritos")
+
+inscritos_prov_2 <- xts(inscritos_prov[, -1], order.by=as.POSIXct(inscritos_prov$fecha_per_id))
+
+dygraph(inscritos_prov_2)%>%
+  dyOptions(colors = RColorBrewer::brewer.pal(25, "Set2")) %>%
+  dyHighlight(highlightCircleSize = 5, 
+              highlightSeriesBackgroundAlpha = 0.2,
+              hideOnMouseOut = FALSE)%>%
+  dyHighlight(highlightSeriesOpts = list(strokeWidth = 3))%>%
+  dyLegend(width = 400)
