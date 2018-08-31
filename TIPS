@@ -1,0 +1,14 @@
+library(tidyr)
+secuencial <- function(x)
+{
+  a <- 2016
+  b <- 2017
+  r=seq(a, b, by = 1)
+  return(r)
+} 
+df <- data.frame(cod_ies=c(1, 2, 3), nombre_ies=c('a', 'b', 'c'))
+df <-   uncount(df,2) %>% remove_rownames()
+df$periodo <- with(df, ave(cod_ies, cod_ies, nombre_ies, FUN = secuencial))
+#rownames(df) <- c()
+#row.names(df) <- NULL
+df
